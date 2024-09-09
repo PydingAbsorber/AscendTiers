@@ -27,17 +27,17 @@ import java.util.Set;
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class ATSearchMixin {
 
-    @Shadow private static CreativeModeTab selectedTab;
-
-    @Shadow @Final private Set<TagKey<Item>> visibleTags;
+    @Shadow private float scrollOffs;
 
     @Shadow private EditBox searchBox;
 
-    @Shadow private float scrollOffs;
+    @Shadow @Final private Set<TagKey<Item>> visibleTags;
+
+    @Shadow private static int selectedTab;
 
     @Inject(method = "refreshSearchResults",at = @At("HEAD"),cancellable = true, require = 1)
     private void refreshSearchResults(CallbackInfo cir) {
-        if (!selectedTab.hasSearchBar()) return;
+        if (!CreativeModeTab.TABS[selectedTab].hasSearchBar()) return;
         String s = searchBox.getValue();
         String filter = Component.translatable("at.tier.lang").getString();
         String discovered = Component.translatable("at.discovered.lang").getString();

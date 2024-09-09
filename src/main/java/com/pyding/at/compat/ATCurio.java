@@ -4,8 +4,6 @@ import com.pyding.at.util.ATUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.curios.api.CuriosApi;
-import top.theillusivec4.curios.api.SlotResult;
-import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,24 +11,26 @@ import java.util.List;
 public class ATCurio {
 
     public static List<ItemStack> getCurioList(Player player){
-        List<SlotResult> result = new ArrayList<>();
-        CuriosApi.getCuriosInventory(player).ifPresent(handler -> {
-            result.addAll(handler.findCurios(itemStack -> itemStack.getItem() instanceof ICurioItem));
-        });
         List<ItemStack> stacks = new ArrayList<>();
-        for(SlotResult hitResult: result){
-            stacks.add(hitResult.stack());
-        }
+        CuriosApi.getCuriosHelper().getEquippedCurios(player).ifPresent(handler -> {
+            for (int index = 0; index < handler.getSlots(); index++) {
+                if (handler.getStackInSlot(index) != null && !handler.getStackInSlot(index).isEmpty()) {
+                    stacks.add(handler.getStackInSlot(index));
+                }
+            }
+        });
         return stacks;
     }
 
     public static void dropCurios(Player player, int tier){
-        CuriosApi.getCuriosInventory(player).ifPresent(handler -> {
-            for (SlotResult curio : handler.findCurios(itemStack -> itemStack.getItem() instanceof ICurioItem)) {
-                if (ATUtil.getTier(curio.stack()) > tier && ATUtil.notIgnored(curio.stack())) {
-                    ItemStack stack = new ItemStack(curio.stack().getItem());
-                    player.drop(stack, true);
-                    curio.stack().setCount(0);
+        CuriosApi.getCuriosHelper().getEquippedCurios(player).ifPresent(handler -> {
+            for (int index = 0; index < handler.getSlots(); index++) {
+                if (handler.getStackInSlot(index) != null && !handler.getStackInSlot(index).isEmpty()) {
+                    ItemStack stack = handler.getStackInSlot(index);
+                    if (ATUtil.getTier(stack) > tier && ATUtil.notIgnored(stack)) {
+                        player.drop(stack, true);
+                        stack.setCount(0);
+                    }
                 }
             }
         });

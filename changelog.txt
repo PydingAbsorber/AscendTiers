@@ -1,11 +1,36 @@
 1.19.2 Changelog
+43.4
+====
+ - 43.4.0 1.19.2 RB 4
+          https://forums.minecraftforge.net/topic/149548-forge-434-minecraft-1192/
+
 43.3
 ====
- - 43.3.2 Optimise path filter in mod loading (#9712)
-          Co-authored-by: embeddedt <42941056+embeddedt@users.noreply.github.com>
- - 43.3.1 Improve mod loading error message for errors inside mod constructors (#9709)
-          Co-authored-by: Jab125 <67534807+jab125@users.noreply.github.com>
- - 43.3.0 1.19.2 RB 3
+ - 43.3.14 Update Gradle to 8.8
+ - 43.3.13 Fix NPE when acceptableValues in defineInList() does not allow nulls, fixes #9300, backport of #9903 (#9909)
+           Co-authored-by: J-RAP <SrRapero720@hotmail.com>
+ - 43.3.12 Optimise capabilities a tad, backport of #9886 (#9918)
+ - 43.3.11 Make common config screen registration tasks easier, backport of #9884 (#9914)
+ - 43.3.10 Bump ASM, fix userdev, fix crowdin (#9925)
+ - 43.3.9  Bump some deps (#9878)
+           - CoreMods 5.0.1 -> 5.1.2
+           - ASM 9.5 -> 9.6
+           - Installer 2.1 -> 2.2
+           - Installer tools 1.3.0 -> 1.4.1
+ - 43.3.8  Fix TagsProvider not honoring replace attribute (#9865)
+ - 43.3.7  Make common DisplayTest registration tasks easier (#9838)
+           Backport of #9822 to 1.19.2
+ - 43.3.6  Optimise ForgeConfigSpec and make Range public (#9827)
+           Backport of #9810 to 1.19.2
+ - 43.3.5  Update to FG6 and Gradle 8, backport 1.20 MDK (#9754)
+ - 43.3.4  Improve mod description formatting in mods screen (#9771)
+           Co-authored-by: Su5eD <su5ed@outlook.com>
+ - 43.3.3  Backport CrashReportAnalyser to 1.19.2 (#9758)
+ - 43.3.2  Optimise path filter in mod loading (#9712)
+           Co-authored-by: embeddedt <42941056+embeddedt@users.noreply.github.com>
+ - 43.3.1  Improve mod loading error message for errors inside mod constructors (#9709)
+           Co-authored-by: Jab125 <67534807+jab125@users.noreply.github.com>
+ - 43.3.0  1.19.2 RB 3
 
 43.2
 ====

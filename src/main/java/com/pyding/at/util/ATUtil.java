@@ -230,10 +230,14 @@ public class ATUtil {
                 ((ATArmorMixin)item).setDefence((int) (armor.getDefense()*calculateToolBonus(tier, armorB)));
                 ((ATArmorMixin)item).setToughness((armor.getToughness()*calculateToolBonus(tier, armorB)));
                 ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
-                UUID uuid = ((ATArmorMixin)item).getModifiers().get(armor.getType());
-                builder.put(Attributes.ARMOR, new AttributeModifier(uuid, "Armor modifier", armor.getDefense(), AttributeModifier.Operation.ADDITION));
-                builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(uuid, "Armor toughness", armor.getToughness(), AttributeModifier.Operation.ADDITION));
-                ((ATArmorMixin)item).setMap(builder.build());
+                ItemStack stack = new ItemStack(armor);
+                if(stack.getEquipmentSlot() != null) {
+                    UUID[] ARMOR_MODIFIER_UUID_PER_SLOT = new UUID[]{UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"), UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E0D"), UUID.fromString("9F3D476D-C118-4544-8365-64846904B48E"), UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150")};
+                    UUID uuid = ARMOR_MODIFIER_UUID_PER_SLOT[stack.getEquipmentSlot().getIndex()];
+                    builder.put(Attributes.ARMOR, new AttributeModifier(uuid, "Armor modifier", armor.getDefense(), AttributeModifier.Operation.ADDITION));
+                    builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(uuid, "Armor toughness", armor.getToughness(), AttributeModifier.Operation.ADDITION));
+                    ((ATArmorMixin) item).setMap(builder.build());
+                }
             }
             if (item.isDamageable(item.getDefaultInstance()))
                 ((ATItemMixin)item).setDurability((int) (item.getMaxDamage()*calculateToolBonus(tier, durability)));

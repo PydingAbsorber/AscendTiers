@@ -24,10 +24,6 @@ public interface ATArmorMixin {
     @Mutable
     public void setDefence(int defence);
 
-    @Accessor("ARMOR_MODIFIER_UUID_PER_TYPE")
-    @Mutable
-    public EnumMap<ArmorItem.Type, UUID> getModifiers();
-
     @Accessor("defaultModifiers")
     @Mutable
     void setMap(Multimap<Attribute, AttributeModifier> map);
