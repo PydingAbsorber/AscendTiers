@@ -123,7 +123,7 @@ public class EventHandler {
     public static void tick(LivingEvent.LivingTickEvent event){
         if(event.getEntity() instanceof Player player){
             if(player.tickCount % 20 == 0){
-                ATUtil.initMaps();
+                ATUtil.initMaps(player);
             }
             player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
                 if(player.getCommandSenderWorld().isClientSide)
@@ -367,7 +367,7 @@ public class EventHandler {
         player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
             cap.sync(player);
         });
-        ATUtil.syncData();
+        ATUtil.syncData(player);
     }
 
     @SubscribeEvent

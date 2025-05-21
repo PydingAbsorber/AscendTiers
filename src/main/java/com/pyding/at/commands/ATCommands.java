@@ -350,7 +350,7 @@ public class ATCommands {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             ConfigHandler.COMMON.itemTiers.set("");
                             itemTiers.clear();
-                            initMaps();
+                            initMaps(player);
                             player.sendSystemMessage(Component.literal("Item Tiers cleared"));
                             return Command.SINGLE_SUCCESS;
                         })
@@ -360,7 +360,7 @@ public class ATCommands {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             ConfigHandler.COMMON.entityTiers.set("");
                             entityTiers.clear();
-                            initMaps();
+                            initMaps(player);
                             player.sendSystemMessage(Component.literal("Item Tiers cleared"));
                             return Command.SINGLE_SUCCESS;
                         })
