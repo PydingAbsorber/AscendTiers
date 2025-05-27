@@ -105,21 +105,6 @@ public class EventHandler {
     }
 
     @SubscribeEvent
-    public static void craftEvent(PlayerEvent.ItemCraftedEvent event){
-        if(ConfigHandler.COMMON.craftLock.get()) {
-            ItemStack stack = event.getCrafting();
-            Player player = event.getEntity();
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                int tier = ATUtil.getTier(stack);
-                if (tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                    event.setCanceled(true);
-                    player.sendSystemMessage(Component.translatable("at.chat.craft", tier));
-                }
-            });
-        }
-    }
-
-    @SubscribeEvent
     public static void tick(LivingEvent.LivingTickEvent event){
         if(event.getEntity() instanceof Player player){
             if(player.tickCount % 20 == 0){
@@ -188,23 +173,6 @@ public class EventHandler {
         }
     }
 
-
-    @SubscribeEvent
-    public static void onPlayerPickUp(PlayerEvent.ItemPickupEvent event){
-        if(!ConfigHandler.COMMON.pickUp.get()) {
-            Player player = event.getEntity();
-            ItemStack stack = event.getStack();
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                int tier = ATUtil.getTier(stack);
-                if(tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                    event.setCanceled(true);
-                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-                }
-            });
-        }
-    }
-
-
     ////////////////entities
 
 
@@ -257,7 +225,7 @@ public class EventHandler {
                 event.setAmount(ATUtil.calculateBonus(event.getAmount(),tier,entityTier,false));
             });
         } else if(event.getSource().getEntity() instanceof LivingEntity livingEntity){
-            event.setAmount(ATUtil.calculateBonus(event.getAmount(),ATUtil.getTier(livingEntity),ATUtil.getTier(event.getEntity()),false));
+            event.setAmount(ATUtil.calculateBonus(event.getAmount(),ATUtil.getTier(livingEntity),ATUtil.getTier(event.getEntity()),true));
         }
     }
 
@@ -278,10 +246,10 @@ public class EventHandler {
         Player player = event.getPlayer();
         player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
             int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
-            if(tier > ATUtil.getTier(player.getMainHandItem())) {
+            if(tier > ATUtil.getTier(player.getMainHandItem()) && cap.getTier(player) != ConfigHandler.COMMON.maxTier.get()) {
                 event.setCanceled(true);
                 player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-            } else cap.addItem(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock().asItem().getDefaultInstance(), player);
+            } else if (!player.isCreative()) cap.addItem(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock().asItem().getDefaultInstance(), player);
         });
     }
 
@@ -361,7 +329,7 @@ public class EventHandler {
         });
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void loginIn(PlayerEvent.PlayerLoggedInEvent event){
         Player player = event.getEntity();
         player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
@@ -370,7 +338,7 @@ public class EventHandler {
         ATUtil.syncData(player);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void loginOut(PlayerEvent.PlayerLoggedOutEvent event){
         Player player = event.getEntity();
         player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {

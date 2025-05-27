@@ -26,16 +26,15 @@ public class SendPlayerCapaToClient {
         return new SendPlayerCapaToClient(buf.readNbt());
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
+    public static void handle(SendPlayerCapaToClient msg,Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            handle2();
+            handle2(msg.tag);
         });
-
         ctx.get().setPacketHandled(true);
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void handle2() {
+    private static void handle2(CompoundTag tag) {
         LocalPlayer player = Minecraft.getInstance().player;
         player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
             cap.loadNBT(tag);
