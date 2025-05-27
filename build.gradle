@@ -17,7 +17,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = '1.0.8'
+version = '1.0.9'
 group = 'com.pyding.at' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'AscendTiers 1.20.1'
 
