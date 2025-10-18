@@ -48,7 +48,7 @@ public class PlayerCapabilityAT {
     }
 
     public int getTier(Player player){
-        if(player.isCreative() || player.isSpectator())
+        if((player.isCreative() || player.isSpectator()) && ConfigHandler.COMMON.creativeMax.get())
             return ConfigHandler.COMMON.maxTier.get();
         return tier;
     }

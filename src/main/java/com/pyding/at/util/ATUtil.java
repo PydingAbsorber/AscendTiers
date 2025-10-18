@@ -12,6 +12,7 @@ import com.pyding.at.network.packets.HashMapClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -49,15 +50,28 @@ public class ATUtil {
     public static HashMap<String,Integer> itemTiers = new HashMap<>();
     public static HashMap<String,Integer> entityTiers = new HashMap<>();
 
+
+    public static String[] split(String input, int chunkSize) {
+        int length = input.length();
+        int parts = (int) Math.ceil((double) length / chunkSize);
+        String[] result = new String[parts];
+        for (int i = 0; i < parts; i++) {
+            int start = i * chunkSize;
+            int end = Math.min(start + chunkSize, length);
+            result[i] = input.substring(start, end);
+        }
+        return result;
+    }
+
     public static void initMaps(Player player){
         if(itemTiers.isEmpty()){
-            initMap(ConfigHandler.COMMON.itemTiers.get().toString(), itemTiers);
+            initMap(ConfigHandler.COMMON.itemTiers.get().toString(), itemTiers, true);
         }
         if(player instanceof ServerPlayer serverPlayer) {
             PacketHandler.sendToClient(new HashMapClient(ConfigHandler.COMMON.itemTiers.get().toString(), 1), serverPlayer);
         }
         if(entityTiers.isEmpty()){
-            initMap(ConfigHandler.COMMON.entityTiers.get().toString(), entityTiers);
+            initMap(ConfigHandler.COMMON.entityTiers.get().toString(), entityTiers, false);
         }
         getItems();
         if(player instanceof ServerPlayer serverPlayer) {
@@ -65,16 +79,22 @@ public class ATUtil {
         }
     }
 
-    public static void initMap(String input, HashMap<String,Integer> map){
+    public static void initMap(String input, HashMap<String,Integer> map, boolean items){
         Pattern pattern = Pattern.compile("(\\d+)-([^,]+)");
         Matcher matcher = pattern.matcher(input);
         while (matcher.find()) {
             int tier = Integer.parseInt(matcher.group(1));
             String element = matcher.group(2);
-            map.put(element, tier);
+            if(items) {
+                for (Item item : getItems()) {
+                    if (item.getDescriptionId().equals(element)) {
+                        map.put(element, tier);
+                        break;
+                    }
+                }
+            } else map.put(element, tier);
         }
     }
-
     public static List<String> getItemsWithTier(int targetTier) {
         List<String> result = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : itemTiers.entrySet()) {

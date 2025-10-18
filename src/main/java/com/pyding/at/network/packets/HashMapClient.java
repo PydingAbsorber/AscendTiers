@@ -8,6 +8,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -22,12 +23,18 @@ public class HashMapClient {
     }
 
     public static void encode(HashMapClient msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.map);
+        byte[] data = msg.map.getBytes(StandardCharsets.UTF_8);
+        buf.writeInt(data.length);
+        buf.writeByteArray(data);
         buf.writeInt(msg.id);
     }
 
     public static HashMapClient decode(FriendlyByteBuf buf) {
-        return new HashMapClient(buf.readUtf(), buf.readInt());
+        int length = buf.readInt();
+        byte[] data = buf.readByteArray(length);
+        String map = new String(data, StandardCharsets.UTF_8);
+        int id = buf.readInt();
+        return new HashMapClient(map, id);
     }
 
     public static void handle(HashMapClient msg, Supplier<NetworkEvent.Context> ctx) {
@@ -41,9 +48,9 @@ public class HashMapClient {
     @OnlyIn(Dist.CLIENT)
     private static void handle2(String map, int id) {
         if(id == 1)
-            ATUtil.initMap(map,ATUtil.itemTiers);
+            ATUtil.initMap(map,ATUtil.itemTiers,true);
         else if(id == 2) {
-            ATUtil.initMap(map, ATUtil.entityTiers);
+            ATUtil.initMap(map, ATUtil.entityTiers,false);
             ATUtil.getItems();
         }
     }
