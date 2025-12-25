@@ -14,7 +14,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.FakePlayer;
@@ -24,6 +24,7 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -42,23 +43,54 @@ public class EventHandler {
     public void tooltipEvent(ItemTooltipEvent event){
         ItemStack stack = event.getItemStack();
         int tier = ATUtil.getTier(stack);
-        if(tier > 0){
-            event.getToolTip().add(Component.translatable("at.tier",tier).withStyle(ATUtil.getColor(tier)));
-            if (!ATUtil.notIgnored(stack))
-                event.getToolTip().add(Component.translatable("at.ignored").withStyle(ATUtil.getColor(tier)));
-            Player player = event.getEntity();
-            if(player != null) {
-                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                    event.getToolTip().add(Component.translatable("at.get.tier", cap.getTier(player)).withStyle(ATUtil.getColor(cap.getTier(player))));
-                    if(ConfigHandler.COMMON.enableExp.get()) {
-                        event.getToolTip().add(Component.translatable("at.tier.2", cap.getExp(), ATUtil.getExpNext(cap.getTier(player))).withStyle(ATUtil.getColor(tier)));
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            if (tier > 0) {
+                event.getToolTip().add(Component.translatable("at.tier", tier).withStyle(ATUtil.getColor(tier)));
+                //event.getToolTip().add(Component.literal("Power: " + ATUtil.getPowerLevel(stack)).withStyle(ATUtil.getColor(tier)));
+                if (!ATUtil.notIgnored(stack))
+                    event.getToolTip().add(Component.translatable("at.ignored").withStyle(ATUtil.getColor(tier)));
+                Player player = event.getEntity();
+                if (player != null) {
+                    player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                        event.getToolTip().add(Component.translatable("at.get.tier", cap.getTier(player)).withStyle(ATUtil.getColor(cap.getTier(player))));
+                        //event.getToolTip().add(Component.literal("Your Power: " + ATUtil.getPowerLevel(player)).withStyle(ATUtil.getColor(cap.getTier(player))));
+                        if (ConfigHandler.COMMON.enableExp.get()) {
+                            event.getToolTip().add(Component.translatable("at.tier.2", cap.getExp(), ATUtil.getExpNext(cap.getTier(player))).withStyle(ATUtil.getColor(tier)));
+                            if (ATUtil.notContains(cap.getItems(), stack.getDescriptionId())) {
+                                String token = "";
+                                if (ATCompat.jeiLoaded()) {
+                                    if (tier <= 10) {
+                                        token = Component.translatable("at.token." + tier).getString();
+                                    } else {
+                                        Random random = new Random(tier);
+                                        StringBuilder result = new StringBuilder();
+                                        for (int i = 0; i < 3; i++) {
+                                            char randomLetter = (char) ('A' + random.nextInt(26));
+                                            result.append(randomLetter);
+                                        }
+                                        token = result.toString();
+                                    }
+                                }
+                                event.getToolTip().add(Component.translatable("at.discovered", token).withStyle(ChatFormatting.GRAY));
+                            }
+                        }
+                    });
+                }
+            }
+        } else {
+            if (tier > 0) {
+                event.getToolTip().add(Component.translatable("at.power", ATUtil.getPowerLevel(stack), ATUtil.convertToRoman(tier)).withStyle(ATUtil.getColor(tier)));
+                if (!ATUtil.notIgnored(stack))
+                    event.getToolTip().add(Component.translatable("at.ignored").withStyle(ATUtil.getColor(tier)));
+                Player player = event.getEntity();
+                if (player != null) {
+                    player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
                         if (ATUtil.notContains(cap.getItems(), stack.getDescriptionId())) {
                             String token = "";
-                            if(ATCompat.jeiLoaded()) {
-                                if(tier <= 10){
-                                    token = Component.translatable("at.token."+tier).getString();
-                                }
-                                else {
+                            if (ATCompat.jeiLoaded()) {
+                                if (tier <= 10) {
+                                    token = Component.translatable("at.token." + tier).getString();
+                                } else {
                                     Random random = new Random(tier);
                                     StringBuilder result = new StringBuilder();
                                     for (int i = 0; i < 3; i++) {
@@ -68,11 +100,12 @@ public class EventHandler {
                                     token = result.toString();
                                 }
                             }
-                            event.getToolTip().add(Component.translatable("at.discovered",token).withStyle(ChatFormatting.GRAY));
+                            event.getToolTip().add(Component.translatable("at.discovered", token).withStyle(ChatFormatting.GRAY));
                         }
-                    }
-                });
-            }
+                    });
+                }
+            } else if (stack.getItem() instanceof TieredItem || stack.getItem() instanceof Equipable || stack.getItem() instanceof Vanishable)
+                event.getToolTip().add(Component.translatable("at.power", ATUtil.getPowerLevel(stack), 0).withStyle(ATUtil.getColor(tier)));
         }
     }
 
@@ -80,12 +113,24 @@ public class EventHandler {
     public static void eatEvent(LivingEntityUseItemEvent.Finish event){
         if(event.getEntity() instanceof Player player) {
             ItemStack stack = event.getResultStack();
+            if(ConfigHandler.COMMON.oldMode.get()) {
+                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                    int tier = ATUtil.getTier(stack);
+                    if (tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                        event.setCanceled(true);
+                        player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                    }
+                });
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void advancementEvent(AdvancementEvent.AdvancementEarnEvent event){
+        Player player = event.getEntity();
+        if(player.tickCount > 20 && !player.level().isClientSide && !event.getAdvancement().getId().getPath().startsWith("recipes/") && event.getAdvancement().getDisplay() != null) {
             player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                int tier = ATUtil.getTier(stack);
-                if(tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                    event.setCanceled(true);
-                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-                }
+                cap.addAdvancement(player);
             });
         }
     }
@@ -94,14 +139,16 @@ public class EventHandler {
     public static void useEvent(PlayerInteractEvent.RightClickItem event){
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
-        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-            int tier = ATUtil.getTier(stack);
-            if(tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                event.setCanceled(true);
-                event.setCancellationResult(InteractionResult.FAIL);
-                player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-            }
-        });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                int tier = ATUtil.getTier(stack);
+                if (tier > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                    event.setCanceled(true);
+                    event.setCancellationResult(InteractionResult.FAIL);
+                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                }
+            });
+        }
     }
 
     @SubscribeEvent
@@ -116,54 +163,60 @@ public class EventHandler {
                 if (player.tickCount % 20 == 0) {
                     cap.sync(player);
                 }
-                for (int i = 0; i < player.getInventory().armor.size(); i++) {
-                    ItemStack stack = player.getInventory().armor.get(i);
-                    if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                if(ConfigHandler.COMMON.oldMode.get()) {
+                    for (int i = 0; i < player.getInventory().armor.size(); i++) {
+                        ItemStack stack = player.getInventory().armor.get(i);
+                        if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                            player.drop(stack, true);
+                            player.getInventory().armor.set(i, ItemStack.EMPTY);
+                        } else cap.addItem(stack, player);
+                    }
+                    if (ATCompat.curiosLoaded()) {
+                        ATCurio.dropCurios(player, cap.getTier(player));
+                    }
+                    if (ATUtil.getTier(player.getOffhandItem()) > cap.getTier(player) && ATUtil.notIgnored(player.getOffhandItem())) {
+                        ItemStack stack = player.getOffhandItem();
                         player.drop(stack, true);
-                        player.getInventory().armor.set(i, ItemStack.EMPTY);
-                    } else cap.addItem(stack, player);
-                }
-                if(ATCompat.curiosLoaded()){
-                    ATCurio.dropCurios(player,cap.getTier(player));
-                }
-                if (ATUtil.getTier(player.getOffhandItem()) > cap.getTier(player) && ATUtil.notIgnored(player.getOffhandItem())) {
-                    ItemStack stack = player.getOffhandItem();
-                    player.drop(stack, true);
-                    player.getInventory().offhand.set(0, ItemStack.EMPTY);
-                }
-                float drop = ConfigHandler.COMMON.timeToDrop.get();
-                if (player.tickCount % 20 == 0) {
-                    if(drop > 0) {
-                        float time = player.getPersistentData().getLong("ATTime");
-                        if (time == 0) {
-                            List<ItemStack> list = ATUtil.getAllItems(player);
-                            boolean display = false;
-                            for (ItemStack stack : list) {
-                                if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                                    player.getPersistentData().putLong("ATTime", (long) (System.currentTimeMillis() + drop));
-                                    display = true;
-                                } else cap.addItem(stack, player);
+                        player.getInventory().offhand.set(0, ItemStack.EMPTY);
+                    }
+                    float drop = ConfigHandler.COMMON.timeToDrop.get();
+                    if (player.tickCount % 20 == 0) {
+                        if (drop > 0) {
+                            float time = player.getPersistentData().getLong("ATTime");
+                            if (time == 0) {
+                                List<ItemStack> list = ATUtil.getAllItems(player);
+                                boolean display = false;
+                                for (ItemStack stack : list) {
+                                    if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                                        player.getPersistentData().putLong("ATTime", (long) (System.currentTimeMillis() + drop));
+                                        display = true;
+                                    } else cap.addItem(stack, player);
+                                }
+                                if (display)
+                                    player.sendSystemMessage(Component.translatable("at.chat.1", (int) (drop / 1000)));
+                            } else if (time > System.currentTimeMillis()) {
+                                player.sendSystemMessage(Component.translatable("at.chat.1", (int) ((time - System.currentTimeMillis()) / 1000)));
+                            } else if (time <= System.currentTimeMillis()) {
+                                player.getPersistentData().putLong("ATTime", 0);
+                                List<ItemStack> list = ATUtil.getAllItems(player);
+                                for (ItemStack stack : list) {
+                                    if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
+                                        player.getInventory().removeItem(stack);
+                                        player.drop(stack, true);
+                                    } else cap.addItem(stack, player);
+                                }
                             }
-                            if(display)
-                                player.sendSystemMessage(Component.translatable("at.chat.1", (int) (drop / 1000)));
-                        } else if (time > System.currentTimeMillis()) {
-                            player.sendSystemMessage(Component.translatable("at.chat.1", (int) ((time - System.currentTimeMillis()) / 1000)));
-                        } else if (time <= System.currentTimeMillis()) {
-                            player.getPersistentData().putLong("ATTime", 0);
-                            List<ItemStack> list = ATUtil.getAllItems(player);
-                            for (ItemStack stack : list) {
-                                if (ATUtil.getTier(stack) > cap.getTier(player) && ATUtil.notIgnored(stack)) {
-                                    player.getInventory().removeItem(stack);
-                                    player.drop(stack, true);
-                                } else cap.addItem(stack, player);
+                        } else {
+                            for (ItemStack stack : ATUtil.getAllItems(player)) {
+                                if (!(ATUtil.getTier(stack) > cap.getTier(player)) || !ATUtil.notIgnored(stack)) {
+                                    cap.addItem(stack, player);
+                                }
                             }
                         }
-                    } else {
-                        for (ItemStack stack : ATUtil.getAllItems(player)) {
-                            if (!(ATUtil.getTier(stack) > cap.getTier(player)) || !ATUtil.notIgnored(stack)) {
-                                cap.addItem(stack, player);
-                            }
-                        }
+                    }
+                } else if (player.tickCount % 20 == 0) {
+                    for (ItemStack stack : ATUtil.getAllItems(player)) {
+                        cap.addItem(stack, player);
                     }
                 }
                 if (player.tickCount % 20 == 0 && cap.getExp() > 0 && cap.getExp() >= ATUtil.getExpNext(cap.getTier(player)) && ATUtil.getExpNext(cap.getTier(player)) > 0) {
@@ -181,118 +234,131 @@ public class EventHandler {
         if(event.getSource() == null || event.getSource().getEntity() == null)
             return;
         int maxTier = ConfigHandler.COMMON.maxTier.get();
-        if(event.getSource().getEntity() instanceof Player player) {
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                ItemStack stack = player.getMainHandItem();
-                int tier = ATUtil.getTier(stack);
-                if(cap.getTier(player) == maxTier)
-                    tier = maxTier;
-                int entityTier = ATUtil.getTier(event.getEntity());
-                if(event.getEntity() instanceof Player dealerPlayer) {
-                    entityTier = 0;
-                    if(cap.getTier(dealerPlayer) == maxTier)
-                        entityTier = maxTier;
-                    else {
-                        for (ItemStack armor : dealerPlayer.getInventory().armor) {
-                            entityTier += ATUtil.getTier(armor);
+        if (ConfigHandler.COMMON.oldMode.get()) {
+            if (event.getSource().getEntity() instanceof Player player) {
+                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                    ItemStack stack = player.getMainHandItem();
+                    int tier = ATUtil.getTier(stack);
+                    if (cap.getTier(player) == maxTier)
+                        tier = maxTier;
+                    int entityTier = ATUtil.getTier(event.getEntity());
+                    if (event.getEntity() instanceof Player dealerPlayer) {
+                        entityTier = 0;
+                        if (cap.getTier(dealerPlayer) == maxTier)
+                            entityTier = maxTier;
+                        else {
+                            for (ItemStack armor : dealerPlayer.getInventory().armor) {
+                                entityTier += ATUtil.getTier(armor);
+                            }
+                            entityTier /= 4;
                         }
-                        entityTier /= 4;
+                    } else if (tier < entityTier && player.getPersistentData().getLong("ATCd") < System.currentTimeMillis()) {
+                        player.getPersistentData().putLong("ATCd", System.currentTimeMillis() + 10000);
+                        player.sendSystemMessage(Component.translatable("at.chat.2", entityTier));
                     }
-                } else if(tier < entityTier && player.getPersistentData().getLong("ATCd") < System.currentTimeMillis()){
-                    player.getPersistentData().putLong("ATCd",System.currentTimeMillis()+10000);
-                    player.sendSystemMessage(Component.translatable("at.chat.2",entityTier));
-                }
-                event.setAmount(ATUtil.calculateBonus(event.getAmount(),tier,entityTier,true));
-            });
-        } else if(event.getEntity() instanceof Player player){
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                int tier = 0;
-                if(cap.getTier(player) == maxTier)
-                    tier = maxTier;
-                else {
-                    for (ItemStack stack : player.getInventory().armor) {
-                        tier += ATUtil.getTier(stack);
+                    event.setAmount(ATUtil.calculateBonus(event.getAmount(), tier, entityTier, true));
+                });
+            } else if (event.getEntity() instanceof Player player) {
+                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                    int tier = 0;
+                    if (cap.getTier(player) == maxTier)
+                        tier = maxTier;
+                    else {
+                        for (ItemStack stack : player.getInventory().armor) {
+                            tier += ATUtil.getTier(stack);
+                        }
+                        tier /= 4;
                     }
-                    tier /= 4;
-                }
-                int entityTier = 0;
-                if(event.getSource().getEntity() instanceof Player dealerPlayer) {
-                    entityTier = ATUtil.getTier(dealerPlayer.getMainHandItem());
-                    if(cap.getTier(dealerPlayer) == maxTier)
-                        entityTier = maxTier;
-                }
-                else if(event.getSource().getEntity() instanceof LivingEntity entity) entityTier = ATUtil.getTier(entity);
-                event.setAmount(ATUtil.calculateBonus(event.getAmount(),tier,entityTier,false));
-            });
-        } else if(event.getSource().getEntity() instanceof LivingEntity livingEntity){
-            event.setAmount(ATUtil.calculateBonus(event.getAmount(),ATUtil.getTier(livingEntity),ATUtil.getTier(event.getEntity()),true));
+                    int entityTier = 0;
+                    if (event.getSource().getEntity() instanceof Player dealerPlayer) {
+                        entityTier = ATUtil.getTier(dealerPlayer.getMainHandItem());
+                        if (cap.getTier(dealerPlayer) == maxTier)
+                            entityTier = maxTier;
+                    } else if (event.getSource().getEntity() instanceof LivingEntity entity)
+                        entityTier = ATUtil.getTier(entity);
+                    event.setAmount(ATUtil.calculateBonus(event.getAmount(), tier, entityTier, false));
+                });
+            } else if (event.getSource().getEntity() instanceof LivingEntity livingEntity) {
+                event.setAmount(ATUtil.calculateBonus(event.getAmount(), ATUtil.getTier(livingEntity), ATUtil.getTier(event.getEntity()), true));
+            }
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void attackEventLowest(LivingAttackEvent event){
-        if(event.getSource() != null && event.getSource().getEntity() instanceof Player player) {
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                ItemStack stack = player.getItemInHand(player.getUsedItemHand());
-                int tier = ATUtil.getTier(stack);
-                if(tier > cap.getTier(player) && ATUtil.notIgnored(stack))
-                    event.setCanceled(true);
-            });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            if (event.getSource() != null && event.getSource().getEntity() instanceof Player player) {
+                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                    ItemStack stack = player.getItemInHand(player.getUsedItemHand());
+                    int tier = ATUtil.getTier(stack);
+                    if (tier > cap.getTier(player) && ATUtil.notIgnored(stack))
+                        event.setCanceled(true);
+                });
+            }
         }
     }
 
     @SubscribeEvent
     public static void onBreak(BlockEvent.BreakEvent event){
         Player player = event.getPlayer();
-        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-            int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
-            if(tier > ATUtil.getTier(player.getMainHandItem()) && cap.getTier(player) != ConfigHandler.COMMON.maxTier.get()) {
-                event.setCanceled(true);
-                player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-            } else if (!player.isCreative()) cap.addItem(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock().asItem().getDefaultInstance(), player);
-        });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
+                if (tier > ATUtil.getTier(player.getMainHandItem()) && cap.getTier(player) != ConfigHandler.COMMON.maxTier.get()) {
+                    event.setCanceled(true);
+                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                } else if (!player.isCreative())
+                    cap.addItem(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock().asItem().getDefaultInstance(), player);
+            });
+        }
     }
 
     @SubscribeEvent
     public static void onPlaced(BlockEvent.EntityPlaceEvent event){
-        if(event.getEntity() instanceof Player player) {
-            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-                int tier = ATUtil.getTier(event.getPlacedBlock().getBlock());
-                boolean ignored = false;
-                if(event.getPlacedBlock().getBlock().asItem() == player.getMainHandItem().getItem()){
-                    ignored = ATUtil.notIgnored(player.getMainHandItem());
-                } else if(event.getPlacedBlock().getBlock().asItem() == player.getOffhandItem().getItem()){
-                    ignored = ATUtil.notIgnored(player.getOffhandItem());
-                }
-                if(tier > cap.getTier(player) && ignored) {
-                    event.setCanceled(true);
-                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-                }
-            });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            if (event.getEntity() instanceof Player player) {
+                player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                    int tier = ATUtil.getTier(event.getPlacedBlock().getBlock());
+                    boolean ignored = false;
+                    if (event.getPlacedBlock().getBlock().asItem() == player.getMainHandItem().getItem()) {
+                        ignored = ATUtil.notIgnored(player.getMainHandItem());
+                    } else if (event.getPlacedBlock().getBlock().asItem() == player.getOffhandItem().getItem()) {
+                        ignored = ATUtil.notIgnored(player.getOffhandItem());
+                    }
+                    if (tier > cap.getTier(player) && ignored) {
+                        event.setCanceled(true);
+                        player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                    }
+                });
+            }
         }
     }
 
     @SubscribeEvent
     public static void useBlock(PlayerInteractEvent.RightClickBlock event){
         Player player = event.getEntity();
-        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-            int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
-            if(tier > cap.getTier(player)) {
-                event.setCanceled(true);
-                player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-            }
-        });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
+                if (tier > cap.getTier(player)) {
+                    event.setCanceled(true);
+                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                }
+            });
+        }
     }
     @SubscribeEvent
     public static void interactEvent(PlayerInteractEvent.LeftClickBlock event){
         Player player = event.getEntity();
-        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
-            int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
-            if(tier > cap.getTier(player)) {
-                event.setCanceled(true);
-                player.sendSystemMessage(Component.translatable("at.chat.use", tier));
-            }
-        });
+        if(ConfigHandler.COMMON.oldMode.get()) {
+            player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+                int tier = ATUtil.getTier(player.getCommandSenderWorld().getBlockState(event.getPos()).getBlock());
+                if (tier > cap.getTier(player)) {
+                    event.setCanceled(true);
+                    player.sendSystemMessage(Component.translatable("at.chat.use", tier));
+                }
+            });
+        }
     }
 
     ///////////////////////other

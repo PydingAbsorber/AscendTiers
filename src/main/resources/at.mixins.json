@@ -8,7 +8,6 @@
   "mixins": [
     "ATArmorMixin",
     "ATItemMixin",
-    "ATItemsMixin",
     "ATSwordsMixin"
   ],
   "client": [

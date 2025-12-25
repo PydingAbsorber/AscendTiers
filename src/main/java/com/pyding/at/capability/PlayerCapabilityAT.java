@@ -16,6 +16,7 @@ public class PlayerCapabilityAT {
     private int tier = 1;
     private int exp = 0;
     private String items = "";
+    private int advancements = 0;
 
     public void addItem(ItemStack stack, Player player){
         int rank = ATUtil.getTier(stack);
@@ -43,7 +44,7 @@ public class PlayerCapabilityAT {
     public void addTier(Player player){
         tier = Math.min(ConfigHandler.COMMON.maxTier.get(),tier+1);
         if(!player.getCommandSenderWorld().isClientSide)
-            player.sendSystemMessage(Component.translatable("at.give",tier));
+            player.sendSystemMessage(Component.translatable("at.give",ATUtil.convertToRoman(tier)));
         sync(player);
     }
 
@@ -76,18 +77,21 @@ public class PlayerCapabilityAT {
         tier = source.tier;
         exp = source.exp;
         items = source.items;
+        advancements = source.advancements;
     }
 
     public void loadNBT(CompoundTag nbt){
         tier = nbt.getInt("ATTiers");
         exp = nbt.getInt("ATExp");
         items = nbt.getString("ATItems");
+        advancements = nbt.getInt("ATAdv");
     }
 
     public void saveNBT(CompoundTag nbt){
         nbt.putInt("ATTiers",tier);
         nbt.putInt("ATExp",exp);
         nbt.putString("ATItems",items);
+        nbt.putInt("ATAdv",advancements);
     }
 
     public void sync(Player player){
@@ -97,5 +101,14 @@ public class PlayerCapabilityAT {
         CompoundTag tag = new CompoundTag();
         saveNBT(tag);
         PacketHandler.sendToClient(new SendPlayerCapaToClient(tag),serverPlayer);
+    }
+
+    public int getAdvancements() {
+        return advancements;
+    }
+
+    public void addAdvancement(Player player) {
+        this.advancements++;
+        sync(player);
     }
 }

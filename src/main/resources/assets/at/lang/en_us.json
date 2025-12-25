@@ -4,6 +4,8 @@
   "at.chat.break": "§cYou must have Tier %s §ctool to break that.",
   "at.chat.craft": "§cYou must have Tier %s §cto craft that.",
   "at.tier": "Tier: %s",
+  "at.power": "Power: %s (%s)",
+  "at.power_level": "Power Level: %s",
   "at.tier.lang": "tier",
   "at.tier.2": "Experience: %s/%s",
   "at.give": "§aYour Tier upgraded to %s",

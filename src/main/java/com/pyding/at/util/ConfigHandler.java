@@ -17,6 +17,7 @@ public class ConfigHandler {
     }
 
     public static class Common {
+        public final ForgeConfigSpec.BooleanValue oldMode;
         public final ForgeConfigSpec.IntValue maxTier;
         public final ForgeConfigSpec.BooleanValue creativeMax;
         public final ForgeConfigSpec.BooleanValue enableExp;
@@ -32,6 +33,7 @@ public class ConfigHandler {
         public final ForgeConfigSpec.ConfigValue blockTiers;
 
         public Common(ForgeConfigSpec.Builder builder) {
+            oldMode = builder.comment("Enables old version mode.").define("oldMode", false);
             maxTier = builder.comment("Defines maximum Tier value.").defineInRange("maxTier", 10, 1, 2100000000);
             creativeMax = builder.comment("Enables max Tier in Creative.").define("creativeMax", true);
             enableExp = builder.comment("Enables exp system to lvl up Tier.").define("enableExp", true);

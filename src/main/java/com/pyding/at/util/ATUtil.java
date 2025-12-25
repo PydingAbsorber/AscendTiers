@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.pyding.at.capability.PlayerCapabilityAT;
 import com.pyding.at.capability.PlayerCapabilityProviderAT;
+import com.pyding.at.compat.ATCompat;
 import com.pyding.at.mixin.ATArmorMixin;
 import com.pyding.at.mixin.ATItemMixin;
 import com.pyding.at.mixin.ATSwordsMixin;
@@ -11,6 +12,7 @@ import com.pyding.at.network.PacketHandler;
 import com.pyding.at.network.packets.HashMapClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -21,14 +23,19 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
+import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.SlotResult;
+import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -401,5 +408,85 @@ public class ATUtil {
 
     public static String getBaseEntities(){
         return "1-entity.aether.aechor_plant,1-entity.aether.aerbunny,2-entity.aether.aerwhale,1-entity.aether.blue_swet,1-entity.aether.cloud_minion,2-entity.aether.cockatrice,1-entity.aether.evil_whirlwind,3-entity.aether.fire_minion,1-entity.aether.flying_cow,1-entity.aether.golden_swet,3-entity.aether.mimic,2-entity.aether.moa,1-entity.aether.phyg,1-entity.aether.sentry,1-entity.aether.sheepuff,2-entity.aether.slider,3-entity.aether.sun_spirit,3-entity.aether.valkyrie,3-entity.aether.valkyrie_queen,1-entity.aether.whirlwind,1-entity.aether.zephyr,10-entity.alexscaves.atlatitan,2-entity.alexscaves.boundroid,2-entity.alexscaves.boundroid_winch,3-entity.alexscaves.brainiac,1-entity.alexscaves.corrodent,2-entity.alexscaves.deep_one,4-entity.alexscaves.deep_one_knight,5-entity.alexscaves.deep_one_mage,1-entity.alexscaves.ferrouslime,10-entity.alexscaves.forsaken,1-entity.alexscaves.gammaroach,1-entity.alexscaves.gloomoth,1-entity.alexscaves.gossamer_worm,3-entity.alexscaves.grottoceratops,10-entity.alexscaves.hullbreaker,1-entity.alexscaves.lanternfish,10-entity.alexscaves.luxtructosaurus,2-entity.alexscaves.magnetron,2-entity.alexscaves.mine_guardian,1-entity.alexscaves.notor,3-entity.alexscaves.nucleeper,1-entity.alexscaves.radgill,2-entity.alexscaves.raycat,7-entity.alexscaves.relicheirus,1-entity.alexscaves.sea_pig,2-entity.alexscaves.subterranodon,1-entity.alexscaves.teletor,8-entity.alexscaves.tremorsaurus,10-entity.alexscaves.tremorzilla,1-entity.alexscaves.trilocaris,1-entity.alexscaves.tripodfish,2-entity.alexscaves.underzealot,2-entity.alexscaves.vallumraptor,1-entity.alexscaves.vesper,2-entity.alexscaves.watcher,1-entity.alexsmobs.alligator_snapping_turtle,3-entity.alexsmobs.anaconda,1-entity.alexsmobs.anaconda_part,2-entity.alexsmobs.anteater,1-entity.alexsmobs.bald_eagle,1-entity.alexsmobs.banana_slug,3-entity.alexsmobs.bison,1-entity.alexsmobs.blobfish,1-entity.alexsmobs.blue_jay,2-entity.alexsmobs.bone_serpent,1-entity.alexsmobs.bone_serpent_part,5-entity.alexsmobs.bunfungus,9-entity.alexsmobs.cachalot_whale,2-entity.alexsmobs.caiman,1-entity.alexsmobs.capuchin_monkey,1-entity.alexsmobs.catfish,1-entity.alexsmobs.centipede_body,2-entity.alexsmobs.centipede_head,1-entity.alexsmobs.centipede_tail,1-entity.alexsmobs.cockroach,1-entity.alexsmobs.comb_jelly,2-entity.alexsmobs.cosmaw,1-entity.alexsmobs.cosmic_cod,1-entity.alexsmobs.crimson_mosquito,2-entity.alexsmobs.crocodile,1-entity.alexsmobs.crow,1-entity.alexsmobs.devils_hole_pupfish,2-entity.alexsmobs.dropbear,5-entity.alexsmobs.elephant,2-entity.alexsmobs.emu,2-entity.alexsmobs.endergrade,2-entity.alexsmobs.enderiophage,4-entity.alexsmobs.farseer,1-entity.alexsmobs.flutter,1-entity.alexsmobs.fly,1-entity.alexsmobs.flying_fish,2-entity.alexsmobs.frilled_shark,2-entity.alexsmobs.froststalker,1-entity.alexsmobs.gazelle,1-entity.alexsmobs.gelada_monkey,2-entity.alexsmobs.giant_squid,2-entity.alexsmobs.gorilla,3-entity.alexsmobs.grizzly_bear,1-entity.alexsmobs.guster,2-entity.alexsmobs.hammerhead_shark,1-entity.alexsmobs.hummingbird,1-entity.alexsmobs.jerboa,2-entity.alexsmobs.kangaroo,2-entity.alexsmobs.komodo_dragon,4-entity.alexsmobs.laviathan,1-entity.alexsmobs.leafcutter_ant,1-entity.alexsmobs.lobster,1-entity.alexsmobs.maned_wolf,2-entity.alexsmobs.mantis_shrimp,1-entity.alexsmobs.mimic_octopus,2-entity.alexsmobs.mimicube,3-entity.alexsmobs.moose,1-entity.alexsmobs.mudskipper,1-entity.alexsmobs.mungus,2-entity.alexsmobs.murmur,2-entity.alexsmobs.murmur_head,4-entity.alexsmobs.orca,1-entity.alexsmobs.platypus,1-entity.alexsmobs.potoo,1-entity.alexsmobs.raccoon,1-entity.alexsmobs.rain_frog,1-entity.alexsmobs.rattlesnake,4-entity.alexsmobs.rhinoceros,1-entity.alexsmobs.roadrunner,1-entity.alexsmobs.rocky_roller,10-entity.alexsmobs.sea_bear,1-entity.alexsmobs.seagull,1-entity.alexsmobs.seal,1-entity.alexsmobs.shoebill,2-entity.alexsmobs.skelewag,1-entity.alexsmobs.skreecher,1-entity.alexsmobs.skunk,2-entity.alexsmobs.snow_leopard,1-entity.alexsmobs.soul_vulture,3-entity.alexsmobs.spectre,2-entity.alexsmobs.straddler,1-entity.alexsmobs.stradpole,1-entity.alexsmobs.sugar_glider,2-entity.alexsmobs.sunbird,1-entity.alexsmobs.tarantula_hawk,1-entity.alexsmobs.tasmanian_devil,1-entity.alexsmobs.terrapin,3-entity.alexsmobs.tiger,1-entity.alexsmobs.toucan,1-entity.alexsmobs.triops,3-entity.alexsmobs.tusklin,2-entity.alexsmobs.underminer,9-entity.alexsmobs.void_worm,2-entity.alexsmobs.void_worm_part,6-entity.alexsmobs.warped_mosco,2-entity.alexsmobs.warped_toad,1-entity.aquaculture.arapaima,1-entity.aquaculture.arrau_turtle,1-entity.aquaculture.atlantic_cod,1-entity.aquaculture.atlantic_halibut,1-entity.aquaculture.atlantic_herring,1-entity.aquaculture.bayad,1-entity.aquaculture.blackfish,1-entity.aquaculture.bluegill,1-entity.aquaculture.boulti,1-entity.aquaculture.box_turtle,1-entity.aquaculture.brown_shrooma,1-entity.aquaculture.brown_trout,1-entity.aquaculture.capitaine,1-entity.aquaculture.carp,1-entity.aquaculture.catfish,1-entity.aquaculture.gar,1-entity.aquaculture.jellyfish,1-entity.aquaculture.minnow,1-entity.aquaculture.muskellunge,1-entity.aquaculture.pacific_halibut,1-entity.aquaculture.perch,1-entity.aquaculture.pink_salmon,1-entity.aquaculture.piranha,1-entity.aquaculture.pollock,1-entity.aquaculture.rainbow_trout,1-entity.aquaculture.red_grouper,1-entity.aquaculture.red_shrooma,1-entity.aquaculture.smallmouth_bass,1-entity.aquaculture.starshell_turtle,1-entity.aquaculture.synodontis,1-entity.aquaculture.tambaqui,1-entity.aquaculture.tuna,3-entity.aquamirae.anglerfish,10-entity.aquamirae.captain_cornelia,10-entity.aquamirae.eel,1-entity.aquamirae.golden_moth,2-entity.aquamirae.luminous_jelly,2-entity.aquamirae.maw,6-entity.aquamirae.maze_mother,2-entity.aquamirae.maze_rose,2-entity.aquamirae.pillagers_patrol,2-entity.aquamirae.poisoned_chakra,2-entity.aquamirae.spinefish,2-entity.aquamirae.tortured_soul,10-entity.bosses_of_mass_destruction.gauntlet,10-entity.bosses_of_mass_destruction.lich,10-entity.bosses_of_mass_destruction.obsidilith,10-entity.bosses_of_mass_destruction.void_blossom,10-entity.botania.doppleganger,10-entity.botania.pink_wither,1-entity.botania.pixie,10-entity.call_of_yucutan.ah_puch,2-entity.call_of_yucutan.ahaw,1-entity.call_of_yucutan.blowgun_huracan,5-entity.call_of_yucutan.chaac,10-entity.call_of_yucutan.golden_guard,10-entity.call_of_yucutan.kukulkan,1-entity.call_of_yucutan.mitnal_monkey,1-entity.call_of_yucutan.undead_warrior,1-entity.call_of_yucutan.updater,10-entity.cataclysm.amethyst_crab,10-entity.cataclysm.ancient_remnant,6-entity.cataclysm.coral_golem,9-entity.cataclysm.coralssus,2-entity.cataclysm.deepling,2-entity.cataclysm.deepling_angler,4-entity.cataclysm.deepling_brute,3-entity.cataclysm.deepling_priest,3-entity.cataclysm.deepling_warlock,8-entity.cataclysm.ender_golem,10-entity.cataclysm.ender_guardian,1-entity.cataclysm.endermaptera,10-entity.cataclysm.ignis,4-entity.cataclysm.ignited_berserker,5-entity.cataclysm.ignited_revenant,10-entity.cataclysm.kobolediator,2-entity.cataclysm.koboleton,1-entity.cataclysm.lionfish,7-entity.cataclysm.modern_remnant,3-entity.cataclysm.nameless_sorcerer,10-entity.cataclysm.netherite_monstrosity,6-entity.cataclysm.the_baby_leviathan,10-entity.cataclysm.the_harbinger,10-entity.cataclysm.the_leviathan,8-entity.cataclysm.the_prowler,2-entity.cataclysm.the_watcher,8-entity.cataclysm.wadjet,10-entity.celestisynth.tempest,1-entity.crittersandcompanions.dragonfly,1-entity.crittersandcompanions.dumbo_octopus,1-entity.crittersandcompanions.ferret,1-entity.crittersandcompanions.jumping_spider,1-entity.crittersandcompanions.koi_fish,1-entity.crittersandcompanions.leaf_insect,1-entity.crittersandcompanions.otter,1-entity.crittersandcompanions.red_panda,1-entity.crittersandcompanions.sea_bunny,1-entity.crittersandcompanions.shima_enaga,2-entity.deeperdarker.sculk_centipede,1-entity.deeperdarker.sculk_leech,1-entity.deeperdarker.sculk_snapper,3-entity.deeperdarker.shattered,6-entity.deeperdarker.shriek_worm,10-entity.deeperdarker.stalker,3-entity.dummmmmmy.target_dummy,2-entity.easy_npc.allay,1-entity.easy_npc.cat,1-entity.easy_npc.chicken,2-entity.easy_npc.drowned,1-entity.easy_npc.fairy,2-entity.easy_npc.humanoid,2-entity.easy_npc.humanoid_slim,2-entity.easy_npc.husk,6-entity.easy_npc.iron_golem,2-entity.easy_npc.skeleton,2-entity.easy_npc.stray,2-entity.easy_npc.villager,2-entity.easy_npc.wither_skeleton,2-entity.easy_npc.zombie,2-entity.easy_npc.zombie_villager,2-entity.eidolon.giant_skeleton,3-entity.eidolon.necromancer,1-entity.eidolon.raven,1-entity.eidolon.slimy_slug,2-entity.eidolon.wraith,3-entity.eidolon.zombie_brute,2-entity.endermanoverhaul.axolotl_pet_enderman,3-entity.endermanoverhaul.badlands_enderman,3-entity.endermanoverhaul.cave_enderman,2-entity.endermanoverhaul.coral_enderman,2-entity.endermanoverhaul.crimson_forest_enderman,3-entity.endermanoverhaul.dark_oak_enderman,3-entity.endermanoverhaul.desert_enderman,3-entity.endermanoverhaul.end_enderman,5-entity.endermanoverhaul.end_islands_enderman,2-entity.endermanoverhaul.flower_fields_enderman,3-entity.endermanoverhaul.hammerhead_pet_enderman,4-entity.endermanoverhaul.ice_spikes_enderman,3-entity.endermanoverhaul.mushroom_fields_enderman,3-entity.endermanoverhaul.nether_wastes_enderman,3-entity.endermanoverhaul.pet_enderman,3-entity.endermanoverhaul.savanna_enderman,1-entity.endermanoverhaul.scarab,2-entity.endermanoverhaul.snowy_enderman,2-entity.endermanoverhaul.soulsand_valley_enderman,1-entity.endermanoverhaul.spirit,3-entity.endermanoverhaul.swamp_enderman,3-entity.endermanoverhaul.warped_forest_enderman,3-entity.endermanoverhaul.windswept_hills_enderman,3-entity.grimoireofgaia.ant,3-entity.grimoireofgaia.ant_hill,3-entity.grimoireofgaia.ant_salvager,5-entity.grimoireofgaia.anubis,3-entity.grimoireofgaia.arachne,5-entity.grimoireofgaia.banshee,3-entity.grimoireofgaia.bee,5-entity.grimoireofgaia.behender,5-entity.grimoireofgaia.bone_knight,3-entity.grimoireofgaia.cecaelia,3-entity.grimoireofgaia.centaur,1-entity.grimoireofgaia.chest,3-entity.grimoireofgaia.cobble_golem,5-entity.grimoireofgaia.cobblestone_golem,3-entity.grimoireofgaia.creep,3-entity.grimoireofgaia.creeper_girl,1-entity.grimoireofgaia.cyan_flower,3-entity.grimoireofgaia.cyclops,3-entity.grimoireofgaia.deathword,3-entity.grimoireofgaia.dryad,3-entity.grimoireofgaia.dullahan,5-entity.grimoireofgaia.dwarf,5-entity.grimoireofgaia.ender_dragon_girl,3-entity.grimoireofgaia.ender_eye,3-entity.grimoireofgaia.ender_girl,5-entity.grimoireofgaia.flesh_lich,5-entity.grimoireofgaia.gelatinous_slime,3-entity.grimoireofgaia.goblin,2-entity.grimoireofgaia.goblin_feral,1-entity.grimoireofgaia.gravemite,3-entity.grimoireofgaia.gryphon,3-entity.grimoireofgaia.harpy,3-entity.grimoireofgaia.horse,3-entity.grimoireofgaia.hunter,3-entity.grimoireofgaia.kobold,3-entity.grimoireofgaia.mandragora,3-entity.grimoireofgaia.matango,5-entity.grimoireofgaia.mermaid,3-entity.grimoireofgaia.mimic,9-entity.grimoireofgaia.minotaur,5-entity.grimoireofgaia.minotaurus,3-entity.grimoireofgaia.mummy,5-entity.grimoireofgaia.naga,5-entity.grimoireofgaia.nine_tails,3-entity.grimoireofgaia.oni,3-entity.grimoireofgaia.orc,3-entity.grimoireofgaia.satyress,5-entity.grimoireofgaia.shaman,5-entity.grimoireofgaia.sharko,3-entity.grimoireofgaia.siren,3-entity.grimoireofgaia.slime_girl,3-entity.grimoireofgaia.sludge_girl,9-entity.grimoireofgaia.sphinx,3-entity.grimoireofgaia.sporeling,5-entity.grimoireofgaia.spriggan,3-entity.grimoireofgaia.succubus,3-entity.grimoireofgaia.toad,3-entity.grimoireofgaia.trader,9-entity.grimoireofgaia.valkyrie,3-entity.grimoireofgaia.werecat,5-entity.grimoireofgaia.witch,3-entity.grimoireofgaia.wither_cow,3-entity.grimoireofgaia.wizard_harpy,5-entity.grimoireofgaia.yuki_onna,4-entity.irons_spellbooks.apothecarist,4-entity.irons_spellbooks.archevoker,2-entity.irons_spellbooks.catacombs_zombie,4-entity.irons_spellbooks.citadel_keeper,4-entity.irons_spellbooks.cryomancer,4-entity.irons_spellbooks.cultist,10-entity.irons_spellbooks.dead_king,10-entity.irons_spellbooks.dead_king_corpse,2-entity.irons_spellbooks.debug_wizard,2-entity.irons_spellbooks.firefly_swarm,1-entity.irons_spellbooks.frozen_humanoid,2-entity.irons_spellbooks.magehunter_vindicator,2-entity.irons_spellbooks.necromancer,4-entity.irons_spellbooks.priest,4-entity.irons_spellbooks.pyromancer,2-entity.irons_spellbooks.root,2-entity.irons_spellbooks.sculk_tentacle,2-entity.irons_spellbooks.spectral_hammer,1-entity.irons_spellbooks.spectral_steed,2-entity.irons_spellbooks.summoned_polar_bear,2-entity.irons_spellbooks.summoned_skeleton,1-entity.irons_spellbooks.summoned_vex,2-entity.irons_spellbooks.summoned_zombie,2-entity.irons_spellbooks.wisp,2-entity.minecraft.allay,2-entity.minecraft.armor_stand,1-entity.minecraft.axolotl,1-entity.minecraft.bat,1-entity.minecraft.bee,2-entity.minecraft.blaze,2-entity.minecraft.camel,1-entity.minecraft.cat,1-entity.minecraft.cave_spider,1-entity.minecraft.chicken,1-entity.minecraft.cod,1-entity.minecraft.cow,2-entity.minecraft.creeper,1-entity.minecraft.dolphin,3-entity.minecraft.donkey,2-entity.minecraft.drowned,5-entity.minecraft.elder_guardian,10-entity.minecraft.ender_dragon,3-entity.minecraft.enderman,1-entity.minecraft.endermite,2-entity.minecraft.evoker,1-entity.minecraft.fox,1-entity.minecraft.frog,1-entity.minecraft.ghast,6-entity.minecraft.giant,1-entity.minecraft.glow_squid,1-entity.minecraft.goat,2-entity.minecraft.guardian,3-entity.minecraft.hoglin,3-entity.minecraft.horse,2-entity.minecraft.husk,2-entity.minecraft.illusioner,6-entity.minecraft.iron_golem,3-entity.minecraft.llama,2-entity.minecraft.magma_cube,1-entity.minecraft.mooshroom,3-entity.minecraft.mule,1-entity.minecraft.ocelot,2-entity.minecraft.panda,1-entity.minecraft.parrot,2-entity.minecraft.phantom,1-entity.minecraft.pig,1-entity.minecraft.piglin,3-entity.minecraft.piglin_brute,2-entity.minecraft.pillager,2-entity.minecraft.polar_bear,1-entity.minecraft.pufferfish,1-entity.minecraft.rabbit,6-entity.minecraft.ravager,1-entity.minecraft.salmon,1-entity.minecraft.sheep,2-entity.minecraft.shulker,1-entity.minecraft.silverfish,2-entity.minecraft.skeleton,1-entity.minecraft.skeleton_horse,2-entity.minecraft.slime,10-entity.minecraft.warden,7-entity.twilightforest.alpha_yeti,2-entity.twilightforest.knight_phantom,2-entity.twilightforest.naga,4-entity.twilightforest.snow_queen,4-entity.twilightforest.quest_ram,4-entity.twilightforest.minoshroom,5-entity.twilightforest.ur_ghast,3-entity.twilightforest.hydra,3-entity.twilightforest.adherent,3-entity.twilightforest.kobold,3-entity.twilightforest.armored_giant,3-entity.twilightforest.bighorn_sheep,3-entity.twilightforest.blockchain_goblin,3-entity.twilightforest.boar,3-entity.twilightforest.carminite_broodling,3-entity.twilightforest.carminite_ghastling,3-entity.twilightforest.carminite_ghastguard,3-entity.twilightforest.carminite_golem,3-entity.twilightforest.death_tome,3-entity.twilightforest.deer,3-entity.twilightforest.dwarf_rabbit,3-entity.twilightforest.fire_beetle,3-entity.twilightforest.giant_miner,3-entity.twilightforest.hostile_wolf,3-entity.twilightforest.hedge_spider,3-entity.twilightforest.helmet_crab,3-entity.twilightforest.lower_goblin_knight,3-entity.twilightforest.troll,3-entity.twilightforest.ice_crystal,3-entity.twilightforest.king_spider,3-entity.twilightforest.stable_ice_core,3-entity.twilightforest.raven,3-entity.twilightforest.swarm_spider,3-entity.twilightforest.redcap_sapper,3-entity.twilightforest.yeti,3-entity.twilightforest.snow_guardian,3-entity.twilightforest.pinch_beetle,3-entity.twilightforest.squirrel,3-entity.twilightforest.wraith,3-entity.twilightforest.winter_wolf,3-entity.twilightforest.mist_wolf,3-entity.twilightforest.penguin,3-entity.twilightforest.mosquito_swarm,3-entity.twilightforest.slime_beetle,3-entity.twilightforest.unstable_ice_core,9-entity.celestisynth.traverser,4-entity.twilightforest.alpha_yeti,8-entity.dragonmounts.dragon,4-entity.goblins_tyranny.mini_goblin_1,4-entity.goblins_tyranny.mini_drunk_gob_1,4-entity.goblins_tyranny.mini_goblin_2,4-entity.goblins_tyranny.mini_drunk_gob_2,4-entity.goblins_tyranny.mini_goblin_3,4-entity.goblins_tyranny.mini_drunk_gob_3,4-entity.goblins_tyranny.leader_goblin,4-entity.goblins_tyranny.bartender_goblin,4-entity.goblins_tyranny.blacksmith_goblin,4-entity.goblins_tyranny.shaman_goblin,4-entity.goblins_tyranny.goblin_huntsman,4-entity.goblins_tyranny.goblin_hunter,4-entity.goblins_tyranny.engineeress_goblin,4-entity.goblins_tyranny.droblin,4-entity.goblins_tyranny.engineer_goblin,4-entity.goblins_tyranny.champion_goblin,4-entity.goblins_tyranny.bard,4-entity.goblins_tyranny.merchant,4-entity.goblins_tyranny.knight_goblin,";
+    }
+
+    public static int getPowerLevel(Object o){
+        float multiplier = 1;
+        float base = 0;
+        float addition = 0;
+        int divider = 1;
+        if(o instanceof ItemStack stack){
+            if(getTier(stack) > 0)
+                multiplier = getTier(stack)*0.1f;
+            else multiplier = 0.1f;
+            divider = 5;
+            if(stack.getItem() instanceof SwordItem swordItem) {
+                base = swordItem.getDamage();
+                base += (float) ATUtil.getAttackSpeed(stack);
+                base += stack.getMaxDamage()/3;
+            } else if(stack.getItem() instanceof ArmorItem armorItem){
+                base = armorItem.getDefense();
+                base += armorItem.getToughness()*4;
+                base += stack.getMaxDamage()/2;
+                divider = 6;
+            } else if(stack.getItem() instanceof TieredItem tieredItem){
+                base = tieredItem.getDestroySpeed(stack, Blocks.STONE.defaultBlockState()) + tieredItem.getDestroySpeed(stack, Blocks.DIRT.defaultBlockState()) + tieredItem.getDestroySpeed(stack, Blocks.OAK_WOOD.defaultBlockState());
+                base += stack.getMaxDamage()/2;
+            }
+            addition = stack.getEnchantmentValue()*2;
+            if(stack.isEnchanted())
+                addition *= (float) (1 + stack.getAllEnchantments().size()*0.3);
+        }
+        else if(o instanceof Player player){
+            base = getPowerLevel(player.getMainHandItem()) + getPowerLevel(player.getOffhandItem());
+            for(ItemStack stack: player.getArmorSlots())
+                base += getPowerLevel(stack);
+            List<SlotResult> result = new ArrayList<>();
+            CuriosApi.getCuriosInventory(player).ifPresent(handler -> {
+                result.addAll(handler.findCurios(itemStack -> itemStack.getItem() instanceof ICurioItem));
+            });
+            for(SlotResult hitResult: result){
+                base += getPowerLevel(hitResult.stack());
+            }
+        }
+        else if(o instanceof LivingEntity livingEntity){
+            multiplier = getTier(livingEntity);
+            base = livingEntity.getMaxHealth() + livingEntity.getArmorValue();
+            addition = (float) (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue()+livingEntity.getAttribute(Attributes.ATTACK_KNOCKBACK).getBaseValue()+livingEntity.getAttribute(Attributes.ATTACK_SPEED).getBaseValue());
+            if(!livingEntity.getActiveEffects().isEmpty())
+                addition *= 1.4f;
+            if(livingEntity.getArmorCoverPercentage() > 0)
+                addition *= 1.25f;
+            if(isNightmareBoss(livingEntity))
+                addition *= 10;
+        }
+        return (int)((base+addition)*multiplier)/divider;
+    }
+
+    public static int getMaximumPower(Player player){
+        AtomicInteger integer = new AtomicInteger();
+        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+            float multiplier = cap.getTier(player);
+            float base = cap.getExp();
+            float addition = cap.getAdvancements()/10f;
+            integer.set((int)((base+addition)*multiplier)+10);
+        });
+        return integer.get();
+    }
+
+    public static String convertToRoman(int number) {
+        if (number <= 0 || number > 3999) {
+            return ""+number;
+        }
+        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] romanLetters = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+        StringBuilder roman = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            while (number >= values[i]) {
+                number -= values[i];
+                roman.append(romanLetters[i]);
+            }
+        }
+        return roman.toString();
     }
 }
