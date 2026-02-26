@@ -29,6 +29,7 @@ public class ConfigHandler {
         public final ForgeConfigSpec.LongValue timeToDrop;
         public final ForgeConfigSpec.DoubleValue minimumDamage;
         public final ForgeConfigSpec.ConfigValue itemTiers;
+        public final ForgeConfigSpec.ConfigValue customPowers;
         public final ForgeConfigSpec.ConfigValue entityTiers;
         public final ForgeConfigSpec.ConfigValue blockTiers;
 
@@ -41,6 +42,7 @@ public class ConfigHandler {
             itemTiers = builder.comment("Tiers for Items: ").define("itemTiers","");
             entityTiers = builder.comment("Tiers for Entities: ").define("entityTiers","");
             blockTiers = builder.comment("Tiers for Blocks: ").define("blockTiers","");
+            customPowers = builder.comment("Custom Power for Items: ").define("customPowers","");
             timeToDrop = builder.comment("Time until items with higher Tier will drop from player. Set to 0 to disable.").defineInRange("timeToDrop", 5000, 0, Long.MAX_VALUE);
             minimumDamage = builder.comment("Minimum damage that higher Tier entity receives.").defineInRange("minimumDamage", 0.1, 0, Float.MAX_VALUE);
 

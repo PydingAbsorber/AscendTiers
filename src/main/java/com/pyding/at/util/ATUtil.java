@@ -56,6 +56,7 @@ public class ATUtil {
 
     public static HashMap<String,Integer> itemTiers = new HashMap<>();
     public static HashMap<String,Integer> entityTiers = new HashMap<>();
+    public static HashMap<String,Integer> itemPowers = new HashMap<>();
 
 
     public static String[] split(String input, int chunkSize) {
@@ -74,15 +75,17 @@ public class ATUtil {
         if(itemTiers.isEmpty()){
             initMap(ConfigHandler.COMMON.itemTiers.get().toString(), itemTiers, true);
         }
-        if(player instanceof ServerPlayer serverPlayer) {
-            PacketHandler.sendToClient(new HashMapClient(ConfigHandler.COMMON.itemTiers.get().toString(), 1), serverPlayer);
-        }
         if(entityTiers.isEmpty()){
             initMap(ConfigHandler.COMMON.entityTiers.get().toString(), entityTiers, false);
         }
         getItems();
+        if(itemPowers.isEmpty()){
+            initMap(ConfigHandler.COMMON.customPowers.get().toString(),itemPowers,true);
+        }
         if(player instanceof ServerPlayer serverPlayer) {
+            PacketHandler.sendToClient(new HashMapClient(ConfigHandler.COMMON.itemTiers.get().toString(), 1), serverPlayer);
             PacketHandler.sendToClient(new HashMapClient(ConfigHandler.COMMON.entityTiers.get().toString(), 2), serverPlayer);
+            PacketHandler.sendToClient(new HashMapClient(ConfigHandler.COMMON.customPowers.get().toString(), 3), serverPlayer);
         }
     }
 
@@ -199,6 +202,13 @@ public class ATUtil {
         if(add.contains("block.minecraft.air"))
             return;
         ConfigHandler.COMMON.itemTiers.set(ConfigHandler.COMMON.itemTiers.get()+add);
+        syncData(player);
+    }
+
+    public static void addPowerConfig(String add,Player player){
+        if(add.contains("block.minecraft.air"))
+            return;
+        ConfigHandler.COMMON.customPowers.set(ConfigHandler.COMMON.customPowers.get()+add);
         syncData(player);
     }
 
@@ -421,17 +431,21 @@ public class ATUtil {
             else multiplier = 0.1f;
             divider = 5;
             if(stack.getItem() instanceof SwordItem swordItem) {
-                base = swordItem.getDamage();
+                base += swordItem.getDamage();
                 base += (float) ATUtil.getAttackSpeed(stack);
                 base += stack.getMaxDamage()/3;
             } else if(stack.getItem() instanceof ArmorItem armorItem){
-                base = armorItem.getDefense();
+                base += armorItem.getDefense();
                 base += armorItem.getToughness()*4;
                 base += stack.getMaxDamage()/2;
                 divider = 6;
             } else if(stack.getItem() instanceof TieredItem tieredItem){
                 base = tieredItem.getDestroySpeed(stack, Blocks.STONE.defaultBlockState()) + tieredItem.getDestroySpeed(stack, Blocks.DIRT.defaultBlockState()) + tieredItem.getDestroySpeed(stack, Blocks.OAK_WOOD.defaultBlockState());
                 base += stack.getMaxDamage()/2;
+            }
+            if(itemPowers.containsKey(stack.getDescriptionId())) {
+                base = itemPowers.get(stack.getDescriptionId());
+                multiplier = 1;
             }
             addition = stack.getEnchantmentValue()*2;
             if(stack.isEnchanted())
@@ -489,4 +503,6 @@ public class ATUtil {
         }
         return roman.toString();
     }
+
+    public static boolean hide = false;
 }

@@ -23,6 +23,17 @@
   "at.token.7": "tierseven",
   "at.token.8": "tiereight",
   "at.token.9": "tiernine",
-  "at.token.10": "tierten"
-
+  "at.token.10": "tierten",
+  "at.buff.1": "1) The creature deals more damage and takes less damage if it has a Power advantage. The greater the advantage, the stronger the effect.\n",
+  "at.buff.2": "2) Each point of Power grants +0.1% to all current attributes.\n",
+  "at.buff.3": "3) If the creature's Power is 10 times higher than the monster's, the monster will be unable to target the creature for an attack.\n",
+  "at.debuff": "When exceeding maximum Power by\n",
+  "at.debuff.1": "1 and higher:\nLoss of all Power bonuses.\nFor each point exceeded, you will take more damage and deal less damage, equipment will lose durability faster.\n",
+  "at.debuff.2": "10% and higher:\nWhen taking damage, there is a 10% chance that enchantments will be removed from equipment and buffs will be removed from the player (100% chance upon death).\n",
+  "at.debuff.3": "25% and higher:\nIn addition to the 10% effect, instead of being removed, enchantments will be replaced with curses and buffs with debuffs. The chance is equal to the percentage of exceeded Power.\n",
+  "at.debuff.4": "50% and higher:\nExperience points gradually drain.\nTaking damage has a 5% chance of causing instant death.\n",
+  "at.debuff.5": "100% and higher:\nDeath chance +5%.\nUpon death, the entire inventory is cleared.",
+  "at.exceed": "Power exceeded by %s!",
+  "at.show": "Show Power",
+  "at.hide": "Hide Power"
 }

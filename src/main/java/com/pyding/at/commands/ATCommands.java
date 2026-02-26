@@ -375,6 +375,19 @@ public class ATCommands {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
+                .then(Commands.literal("setPower")
+                        .then(Commands.argument("power", IntegerArgumentType.integer())
+                                .executes(context -> {
+                                    int power = IntegerArgumentType.getInteger(context, "power");
+                                    ServerPlayer player = context.getSource().getPlayerOrException();
+                                    ATUtil.giveBonus(player.getMainHandItem().getItem());
+                                    String element = power+"-"+player.getMainHandItem().getDescriptionId()+",";
+                                    ATUtil.addPowerConfig(element,player);
+                                    player.sendSystemMessage(Component.literal("Power " + power + " has been set to item in hands"));
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                )
         );
     }
 }

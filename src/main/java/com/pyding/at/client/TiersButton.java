@@ -1,6 +1,8 @@
 package com.pyding.at.client;
 
+import com.pyding.at.capability.PlayerCapabilityProviderAT;
 import com.pyding.at.util.ATUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -18,17 +20,33 @@ public class TiersButton extends ImageButton {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        if (player == null)
+            return;
         int barIndex = 0;
-        if (player != null) {
-            int power = ATUtil.getPowerLevel(player);
-            int maxPower = ATUtil.getMaximumPower(player);
-            if (power > 0 && maxPower > 0) {
-                barIndex = (int)((float) power / maxPower * 10);
-                barIndex = Math.max(0, Math.min(10, barIndex));
-            }
+        int power = ATUtil.getPowerLevel(player);
+        int maxPower = ATUtil.getMaximumPower(player);
+        if (power > 0 && maxPower > 0) {
+            barIndex = (int)((float) power / maxPower * 10);
+            barIndex = Math.max(0, Math.min(10, barIndex));
         }
         ResourceLocation dynamicTexture = new ResourceLocation("at", "textures/gui/bar" + barIndex + ".png");
         guiGraphics.blit(dynamicTexture, getX(), getY(), 0, 0, width, height, width, height);
-        setTooltip(Tooltip.create(Component.translatable("at.power_level", ATUtil.getPowerLevel(player) + " / " + ATUtil.getMaximumPower(player))));
+        ChatFormatting color;
+        if(power >= maxPower*0.9)
+            color = ChatFormatting.RED;
+        else if(power >= maxPower*0.5)
+            color = ChatFormatting.YELLOW;
+        else color = ChatFormatting.GREEN;
+        int tier = ATUtil.getTier(player);
+        Component component;
+        if(power > maxPower && (maxPower/100) > 0)
+            component = Component.translatable("at.exceed",(power-maxPower)/(maxPower/100) + "%");
+        else component = Component.empty();
+        player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
+            setTooltip(Tooltip.create(Component.translatable("at.power_level", power + " / " + maxPower + "\n").withStyle(color)
+                    .append(Component.translatable("at.tier", ATUtil.convertToRoman(tier) + "\n").withStyle(ATUtil.getColor(tier)))
+                    .append(Component.translatable("at.tier.2", cap.getExp(), ATUtil.getExpNext(cap.getTier(player))).withStyle(ATUtil.getColor(tier)))
+                    .append(component)));
+        });
     }
 }

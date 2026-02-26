@@ -52,6 +52,8 @@ public class HashMapClient {
         else if(id == 2) {
             ATUtil.initMap(map, ATUtil.entityTiers,false);
             ATUtil.getItems();
+        } else if(id == 3){
+            ATUtil.initMap(map,ATUtil.itemPowers,true);
         }
     }
 }
