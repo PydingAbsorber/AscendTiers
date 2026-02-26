@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.pyding.at.capability.PlayerCapabilityProviderAT;
 import com.pyding.at.util.ATUtil;
 import com.pyding.at.util.ConfigHandler;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -337,7 +338,7 @@ public class ATCommands {
                                 })
                         )
                 )
-                .then(Commands.literal("autoTiersItems")
+                .then(Commands.literal("autoTiersItems").requires(sender -> sender.hasPermission(2))
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             ATUtil.addItemConfig(ATUtil.getBaseItems(),player);
@@ -345,7 +346,7 @@ public class ATCommands {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                .then(Commands.literal("clearItemTiers")
+                .then(Commands.literal("clearItemTiers").requires(sender -> sender.hasPermission(2))
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             ConfigHandler.COMMON.itemTiers.set("");
@@ -355,7 +356,7 @@ public class ATCommands {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                .then(Commands.literal("clearEntityTiers")
+                .then(Commands.literal("clearEntityTiers").requires(sender -> sender.hasPermission(2))
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             ConfigHandler.COMMON.entityTiers.set("");
@@ -365,7 +366,7 @@ public class ATCommands {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                .then(Commands.literal("clearProgress")
+                .then(Commands.literal("clearProgress").requires(sender -> sender.hasPermission(2))
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             player.getCapability(PlayerCapabilityProviderAT.playerCap).ifPresent(cap -> {
@@ -375,7 +376,7 @@ public class ATCommands {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                .then(Commands.literal("setPower")
+                .then(Commands.literal("setPower").requires(sender -> sender.hasPermission(2))
                         .then(Commands.argument("power", IntegerArgumentType.integer())
                                 .executes(context -> {
                                     int power = IntegerArgumentType.getInteger(context, "power");
@@ -383,7 +384,7 @@ public class ATCommands {
                                     ATUtil.giveBonus(player.getMainHandItem().getItem());
                                     String element = power+"-"+player.getMainHandItem().getDescriptionId()+",";
                                     ATUtil.addPowerConfig(element,player);
-                                    player.sendSystemMessage(Component.literal("Power " + power + " has been set to item in hands"));
+                                    player.sendSystemMessage(Component.literal("Base Power " + power + " has been set to item in hands. \nNote: base Power increases with Tiers and other things.").withStyle(ChatFormatting.GREEN));
                                     return Command.SINGLE_SUCCESS;
                                 })
                         )

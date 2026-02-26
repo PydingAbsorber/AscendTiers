@@ -445,7 +445,6 @@ public class ATUtil {
             }
             if(itemPowers.containsKey(stack.getDescriptionId())) {
                 base = itemPowers.get(stack.getDescriptionId());
-                multiplier = 1;
             }
             addition = stack.getEnchantmentValue()*2;
             if(stack.isEnchanted())
